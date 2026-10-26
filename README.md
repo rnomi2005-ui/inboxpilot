@@ -7,7 +7,7 @@ InboxPilot is a local-first starter app for legitimate email deliverability chec
 - DNS TXT lookup for SPF, DMARC, and a best-effort DKIM selector check
 - Warm-up planning (planning only; no fake engagement)
 - Basic draft-risk review
-- Optional Gmail OAuth connection and sending through Gmail API
+- Gmail sending intentionally disabled in hosted preview until secure web OAuth is implemented
 - Send a test email to an inbox you control; manually inspect the receiving inbox/folder
 
 ## Important limitations
@@ -16,7 +16,7 @@ InboxPilot is a local-first starter app for legitimate email deliverability chec
 - The app does not generate artificial opens, replies, or fake engagement.
 - Postmaster Tools data is not included in this MVP. Add the API integration after domain verification and OAuth scopes are configured.
 - Use only recipients you have a legitimate reason to contact. Respect opt-outs and applicable law.
-- This starter is for local testing, not production deployment. Before exposing it publicly, add authentication, HTTPS, CSRF protections, rate limits, persistent encrypted token storage, audit logs, and deployment secrets management.
+- This hosted preview provides DNS, warm-up planning, and draft-review features only. Gmail sending is disabled. Before using with real accounts or exposing sensitive data, add authentication, rate limits, audit logs, and secure deployment practices.
 
 ## Requirements
 - Python 3.11+
@@ -36,17 +36,8 @@ uvicorn app:app --reload
 ```
 Open http://127.0.0.1:8000
 
-## Enable Gmail API sending
-1. In Google Cloud Console, create/select a project.
-2. Enable the Gmail API.
-3. Configure OAuth consent screen and add your own Google account as a test user while in testing mode.
-4. Create an OAuth Client ID of type **Desktop app** and download the JSON file.
-5. Save it as `credentials.json` beside `app.py`.
-6. Restart the app and click **Connect Google Workspace**.
-7. Review and approve the Google permission prompt.
-8. Send a test message only to an inbox you control first.
-
-This MVP uses the narrow `gmail.send` scope. Google may require verification or other configuration depending on how you distribute the app. Never share `credentials.json` or `token.json`.
+## Gmail sending
+Gmail sending is disabled in this hosted preview. Do not upload Google OAuth client files, access tokens, or passwords to GitHub. A secure web-based OAuth flow and protected token storage must be implemented before enabling sending.
 
 ## Domain checks
 - SPF: looks for a TXT record starting with `v=spf1`; checks presence only, not full SPF syntax or DNS lookup limits.
@@ -65,5 +56,6 @@ Enter a Gmail/Outlook test inbox that you own or are authorized to test. InboxPi
 - Optional third-party inbox placement provider if automated seed testing is required
 
 ## Security
-- OAuth token is stored locally in `token.json` for this prototype. Restrict access to your computer.
-- Do not deploy this development server to the public internet as-is.
+- This preview does not store Gmail tokens or credentials.
+- Do not enable Gmail sending until secure web OAuth and token storage are implemented.
+- Inbox placement is not guaranteed; use relevant recipients and honor opt-outs.
