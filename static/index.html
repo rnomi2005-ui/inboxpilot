@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InboxPilot — Deliverability</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#182230;background:#f4f6fa}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1000px;margin:28px auto;padding:0 16px}
+header{background:#152b4b;color:white;padding:24px;border-radius:18px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+h1{margin:0 0 6px;font-size:27px}p{line-height:1.5}.muted{color:#68778b;font-size:14px}.white-muted{color:#d2dced}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}button{border:0;border-radius:9px;padding:10px 14px;background:#155eef;color:white;font-weight:600;cursor:pointer}button.secondary{background:#e6edf7;color:#1c3457}button:hover{filter:brightness(.97)}
+.tab{display:none}.tab.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{background:white;border:1px solid #e0e6ef;border-radius:14px;padding:18px;margin-bottom:14px}
+label{display:block;font-weight:600;font-size:14px;margin:10px 0 6px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;background:white;font:inherit}
+textarea{min-height:180px;resize:vertical}.metric{font-size:26px;font-weight:750;margin:8px 0}.status{padding:4px 8px;border-radius:99px;background:#e8f2ff;color:#1d4e89;font-size:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.result{white-space:pre-wrap;background:#f7f9fc;padding:12px;border-radius:9px;margin-top:12px;overflow-wrap:anywhere}.checks label{font-weight:400}.checks input{width:auto;margin-right:8px}
+footer{padding:14px 0;color:#6b7789;font-size:12px}
+@media(max-width:600px){header{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body><div class="wrap">
+<header><div><h1>✉ InboxPilot</h1><div class="white-muted">Google Workspace deliverability for dispatchers</div></div><span class="status">Local MVP</span></header>
+<nav>
+<button data-tab="overview">Overview</button><button class="secondary" data-tab="domain">Domain health</button><button class="secondary" data-tab="warmup">Warm-up plan</button><button class="secondary" data-tab="test">Inbox test</button><button class="secondary" data-tab="review">Email review</button>
+</nav>
+<section id="overview" class="tab active">
+<div class="grid">
+<div class="card"><div class="muted">Gmail connection</div><div class="metric" id="gmailState">Not connected</div><button onclick="connectGmail()">Connect Google Workspace</button><p class="muted">Uses Google OAuth; never enter your password in this app.</p></div>
+<div class="card"><div class="muted">Domain authentication</div><div class="metric" id="authState">Not checked</div><p class="muted">Run a DNS check for SPF, DKIM, and DMARC.</p><button class="secondary" onclick="showTab('domain')">Check domain</button></div>
+<div class="card"><div class="muted">Warm-up planner</div><div class="metric">7 days</div><p class="muted">Plan genuine one-to-one outreach; no fake opens or replies.</p><button class="secondary" onclick="showTab('warmup')">Build plan</button></div>
+</div>
+<div class="card"><h2>First steps</h2><ol><li>Check the sending domain's DNS records.</li><li>Connect Gmail with OAuth.</li><li>Send a test to an inbox you control.</li><li>Check the receiving folder and monitor complaints/bounces.</li></ol><p class="muted">InboxPilot cannot guarantee inbox placement.</p></div>
+</section>
+<section id="domain" class="tab"><div class="card"><h2>Domain authentication check</h2><label>Business domain</label><input id="domainInput" placeholder="example.com"><label>DKIM selector (from Google Admin)</label><input id="selectorInput" value="google"><p class="muted">The selector must match your actual DNS record. “google” is only a starting guess.</p><button onclick="checkDomain()">Run DNS checks</button><div id="domainResult" class="result">No check run yet.</div></div></section>
+<section id="warmup" class="tab"><div class="card"><h2>Warm-up planner</h2><label>Mailbox history</label><select id="mailboxStatus"><option>New</option><option>Established but inactive</option><option>Active</option></select><label>Current daily sending volume</label><input id="volume" type="number" min="1" max="500" value="5"><button onclick="buildPlan()">Create plan</button><div id="planResult" class="result">No plan generated yet.</div><p class="muted">Targets are illustrative, not guaranteed safe quotas. Only send relevant, wanted emails.</p></div></section>
+<section id="test" class="tab"><div class="card"><h2>Send inbox placement test</h2><p>Send a test message to an inbox you own. Then inspect the receiving mailbox and record whether it landed in Inbox, Spam, or another folder.</p><label>Recipient inbox you control</label><input id="testTo" type="email" placeholder="your.test.inbox@gmail.com"><label>Subject</label><input id="testSubject" value="InboxPilot placement test"><label>Message</label><textarea id="testBody">This is a test message from my Google Workspace mailbox to check email placement. Please inspect which folder receives it.</textarea><p class="muted">The app only reports that Gmail accepted the send request. It cannot see the destination folder unless you separately integrate an authorized mailbox.</p><button onclick="sendTest()">Send test email</button><div id="sendResult" class="result">No test sent yet.</div><label>Where did it arrive?</label><select id="placement"><option>Not checked</option><option>Inbox</option><option>Spam</option><option>Other folder</option><option>Not delivered</option></select><button class="secondary" onclick="savePlacement()">Record result</button><div id="placementResult" class="result"></div></div></section>
+<section id="review" class="tab"><div class="card"><h2>Draft risk review</h2><label>Subject</label><input id="reviewSubject" placeholder="Quick question about your preferred lanes"><label>Email body</label><textarea id="reviewBody">Hi Mike,
+
+I'm reaching out from Rovix Logistics to see whether you need help finding suitable loads for your truck. We focus on your preferred lanes, equipment, and rate requirements.
+
+Would you be open to a brief conversation?
+
+Best regards</textarea><div class="checks"><label><input type="checkbox" id="relevant" checked> Recipient is relevant and I have a legitimate reason to contact them.</label><label><input type="checkbox" id="optout" checked> I will honor opt-outs and applicable rules.</label></div><button onclick="reviewDraft()">Review draft</button><div id="reviewResult" class="result">No review run yet.</div></div></section>
+<footer>Local prototype. Do not expose publicly without authentication, HTTPS, encrypted token storage, access controls, rate limiting, and audit logs.</footer>
+</div>
+<script>
+async function api(path,body){const r=await fetch(path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});const d=await r.json().catch(()=>({detail:'Unexpected response'}));if(!r.ok)throw new Error(d.detail||'Request failed');return d}
+function showTab(id){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('nav button').forEach(x=>{x.classList.toggle('secondary',x.dataset.tab!==id)});}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+function out(id,data){document.getElementById(id).textContent=typeof data==='string'?data:JSON.stringify(data,null,2)}
+async function refreshStatus(){try{const s=await api('/api/status');document.getElementById('gmailState').textContent=s.token_file_present?'Token saved':'Not connected'}catch(e){}}
+async function connectGmail(){try{const r=await api('/api/connect-gmail',{});document.getElementById('gmailState').textContent=r.email;alert('Connected as '+r.email)}catch(e){alert(e.message)}}
+async function checkDomain(){try{const r=await api('/api/domain-check',{domain:document.getElementById('domainInput').value,dkim_selector:document.getElementById('selectorInput').value});out('domainResult',r);const found=['spf','dkim','dmarc'].filter(k=>r[k].status==='found').length;document.getElementById('authState').textContent=found+'/3 found'}catch(e){out('domainResult',e.message)}}
+async function buildPlan(){try{const r=await api('/api/warmup-plan',{mailbox_status:document.getElementById('mailboxStatus').value,current_daily_volume:Number(document.getElementById('volume').value)});out('planResult',r)}catch(e){out('planResult',e.message)}}
+async function sendTest(){try{const r=await api('/api/send-test',{to:document.getElementById('testTo').value,subject:document.getElementById('testSubject').value,body:document.getElementById('testBody').value,test_mode:true});out('sendResult',r)}catch(e){out('sendResult',e.message)}}
+function savePlacement(){out('placementResult','Recorded locally for this session: '+document.getElementById('placement').value+'. Persistent history is not configured in this MVP.')}
+async function reviewDraft(){try{const r=await api('/api/review',{subject:document.getElementById('reviewSubject').value,body:document.getElementById('reviewBody').value,recipients_are_relevant:document.getElementById('relevant').checked,opt_out_handling:document.getElementById('optout').checked});out('reviewResult',r)}catch(e){out('reviewResult',e.message)}}
+refreshStatus();
+</script></body></html>
